@@ -1,9 +1,5 @@
 import datetime
-import requests
 import csv
-import matplotlib
-matplotlib.use('MacOSX')
-import matplotlib.pyplot as plt
 
 from balance import balanced_position
 

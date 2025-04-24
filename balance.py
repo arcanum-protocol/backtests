@@ -1,11 +1,3 @@
-import datetime
-import requests
-import csv
-import matplotlib
-matplotlib.use('MacOSX')
-import matplotlib.pyplot as plt
-
-
 class Position:
     def __init__(self, entry_btc_quanity, entry_usdt_quantity, entry_btc_price):
         self.volume = 0

@@ -36,8 +36,9 @@ class UniswapLPStrategy:
     def run(self):
         dates = []
         lp_position_values = []
-        # fee_values = []
-        lp_position_values_excluding_fees = []
+        lp_position_values_including_fees = []
+        volume0 = 0
+        volume1 = 0
 
         prev_amount0 = 0
         prev_amount1 = 0
@@ -58,9 +59,11 @@ class UniswapLPStrategy:
                 delta_amount0 = self.amount0 - prev_amount0
                 delta_amount1 = self.amount1 - prev_amount1
                 if delta_amount0 > 0:
+                    volume0 += delta_amount0
                     delta_fees0 = delta_amount0 * FEE_TIER
                     self.fees0 += delta_fees0
                 else:
+                    volume1 += delta_amount1
                     delta_fees1 = delta_amount1 * FEE_TIER
                     self.fees1 += delta_fees1
             elif self.current_price <= self.lower_bound:
@@ -71,27 +74,29 @@ class UniswapLPStrategy:
                 self.amount1 = uniswap_utils.calc_amount1(self.liq, self.lower_bound, self.upper_bound)
             
             dates.append(ts)
-            lp_position_values.append(self.amount0 * self.current_price + self.amount1 + self.fees0 * self.current_price + self.fees1)
-            lp_position_values_excluding_fees.append(self.amount0 * self.current_price + self.amount1)
+            lp_position_values.append(self.amount0 * self.current_price + self.amount1)
+            lp_position_values_including_fees.append(self.amount0 * self.current_price + self.amount1 + self.fees0 * self.current_price + self.fees1)
             prev_amount0 = self.amount0
             prev_amount1 = self.amount1
         
-        self.plot(dates, lp_position_values, lp_position_values_excluding_fees)
-
-    def plot(self, dates, lp_position_values, lp_position_values_excluding_fees):
-        plt.plot(dates, lp_position_values)
-        plt.plot(dates, lp_position_values_excluding_fees)
-        plt.legend(['LP Position Value', 'LP Position Value (Excluding Fees)'])
-        plt.xlabel('Time')
-        plt.ylabel('Value')
-        plt.title('Uniswap Backtesting')
-        plt.show()
-
-        print(f"LP Position Value: {lp_position_values[-1]:.2f}")
-        print(f"LP Position Value (Excluding Fees): {lp_position_values_excluding_fees[-1]:.2f}")
-        # calculate change in value
+        print(f"LP Position Value: {lp_position_values[-1]:.2f} USDC")
+        print(f"LP Position Value (Including Fees): {lp_position_values_including_fees[-1]:.2f} USDC")
         change = (lp_position_values[-1] - lp_position_values[0]) / lp_position_values[0] * 100
         print(f"Change in Value: {change:.2f}%")
-        # calculate change in value excluding fees
-        change_excluding_fees = (lp_position_values_excluding_fees[-1] - lp_position_values_excluding_fees[0]) / lp_position_values_excluding_fees[0] * 100
-        print(f"Change in Value (Excluding Fees): {change_excluding_fees:.2f}%")
+        change = (lp_position_values_including_fees[-1] - lp_position_values_including_fees[0]) / lp_position_values_including_fees[0] * 100
+        print(f"Change in Value (Including fees): {change:.2f}%")
+        print(f"Fees Earned: {self.fees0:.2f} BTC | {self.fees1:.2f} USDC")
+        print(f"Fees Earned (in USDC): {self.fees0 * self.current_price + self.fees1:.2f} USDC")
+        print(f"Volume (in USDC): {volume0 * self.current_price + volume1:.2f} USDC")
+        
+        # self.plot(dates, lp_position_values, lp_position_values_including_fees)
+
+    # def plot(self, dates, lp_position_values, lp_position_values_including_fees):
+    #     plt.plot(dates, lp_position_values)
+    #     plt.plot(dates, lp_position_values_including_fees)
+    #     plt.legend(['LP Position Value', 'LP Position Value (Including Fees)'])
+    #     plt.xlabel('Time')
+    #     plt.ylabel('Value')
+    #     plt.title('Uniswap Backtesting')
+    #     plt.show()
+

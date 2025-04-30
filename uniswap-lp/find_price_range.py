@@ -1,39 +1,61 @@
 from scipy.optimize import minimize
 import uniswap_utils
+import argparse
 
-current_price = 19420.0
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-p",
+    "--initial_price",
+    type=float,
+    required=True,
+)
+parser.add_argument(
+    "-a",
+    "--initial_amount",
+    type=float,
+    required=True,
+)
+parser.add_argument(
+    "-l",
+    "--lower_bound",
+    type=float,
+    required=True,
+)
+parser.add_argument(
+    "-u",
+    "--upper_bound",
+    type=float,
+    required=True,
+)
+args = parser.parse_args()
 
 # Target: equal amounts of tokens
-def amount_imbalance(x, current_price, initial_amount):
+def amount_imbalance(x, initial_price, initial_amount):
     Pa, Pb = x
     amount1 = initial_amount * 0.5
-    amount0 = amount1 / current_price
+    amount0 = amount1 / initial_price
     
-    liq0 = uniswap_utils.liquidity0(amount0, Pb, current_price)
-    liq1 = uniswap_utils.liquidity1(amount1, Pa, current_price)
+    liq0 = uniswap_utils.liquidity0(amount0, Pb, initial_price)
+    liq1 = uniswap_utils.liquidity1(amount1, Pa, initial_price)
     liq = min(liq0, liq1)
     
-    amount0 = uniswap_utils.calc_amount0(liq, Pb, current_price)
-    amount1 = uniswap_utils.calc_amount1(liq, Pa, current_price)
-    return abs(amount0 * current_price - amount1)
+    amount0 = uniswap_utils.calc_amount0(liq, Pb, initial_price)
+    amount1 = uniswap_utils.calc_amount1(liq, Pa, initial_price)
+    return abs(amount0 * initial_price - amount1)
 
-x = 19420.0  # upper limit for Pa
-y = 32139.47 # lower limit for Pb
+x = args.lower_bound
+y = args.upper_bound
 
-# Bounds: sqrtPa < sqrtP_upper, sqrtPb > sqrtP_lower
-bounds = [(1, x-x*0.1), (y+y*0.1, 100000)]  # reasonable upper limit
+bounds = [(1, x-x*0.1), (y+y*0.1, 100000)] # range constraints for Pa and Pb
 
-# Initial guess: some range between constraints
-x0 = [x - 0.01, y + 0.01]
+x0 = [x - 0.01, y + 0.01] # initial guess
 
-# Run optimization
 result = minimize(
     amount_imbalance,
     x0,
-    args=(current_price, 1_000_000.0),
+    args=(args.initial_price, 100_000_000.0),
     method='SLSQP',
     bounds=bounds,
-    # options={'ftol': 1e-10}
 )
 
 if result.success:

@@ -1,6 +1,7 @@
 import datetime
 import pandas as pd
 from uniswap_lp_strategy import UniswapLPStrategy
+from find_price_range import find_price_range
 
 def calculate_lp_performance(
         candles: pd.DataFrame,
@@ -22,47 +23,69 @@ def calculate_lp_performance(
     )
     strategy_backtest.run()
 
-# Case 1: Kinda check previous cycle growth
+# Case 3: check current cycle performance
 if __name__ == "__main__":
     candles = pd.read_csv('candles.csv')
 
+    init_price = 16582.65
+    lower_bound = 16582.65
+    upper_bound = 84525.46
+    interval = (datetime.datetime(2023, 1, 1), datetime.datetime(2025, 4, 16))
+
+    Pa, Pb = find_price_range(
+        initial_price=init_price,
+        initial_amount=1_000_000.0,
+        lower_bound=lower_bound,
+        upper_bound=upper_bound
+    )
     print("------------------------------")
     print("LP position for 1 000 000$")
     print("-------------------------------")
     calculate_lp_performance(
         candles,
-        init_price=19420.0,
-        lower_bound=10666.673653,
-        upper_bound=35356.514342,
-        amount0=1_000_000.0 * 0.5 / 19420.0,
+        init_price=init_price,
+        lower_bound=Pa,
+        upper_bound=Pb,
+        amount0=1_000_000.0 * 0.5 / init_price,
         amount1=1_000_000.0 * 0.5,
-        interval=(datetime.datetime(2020, 12, 1), datetime.datetime(2022, 6, 1))
+        interval=interval
     )
 
     print("------------------------------")
     print("LP position for 10 000 000$")
     print("-------------------------------")
 
+    Pa, Pb = find_price_range(
+        initial_price=init_price,
+        initial_amount=10_000_000.0,
+        lower_bound=lower_bound,
+        upper_bound=upper_bound
+    )
     calculate_lp_performance(
         candles,
-        init_price=19420.0,
-        lower_bound=10655.147421,
-        upper_bound=35394.761339,
-        amount0=10_000_000.0 * 0.5 / 19420.0,
+        init_price=init_price,
+        lower_bound=Pa,
+        upper_bound=Pb,
+        amount0=10_000_000.0 * 0.5 / init_price,
         amount1=10_000_000.0 * 0.5,
-        interval=(datetime.datetime(2020, 12, 1), datetime.datetime(2022, 6, 1))
+        interval=interval
     )
 
     print("------------------------------")
     print("LP position for 100 000 000$")
     print("-------------------------------")
-    
+    Pa, Pb = find_price_range(
+        initial_price=init_price,
+        initial_amount=100_000_000.0,
+        lower_bound=lower_bound,
+        upper_bound=upper_bound
+    )
     calculate_lp_performance(
         candles,
-        init_price=19420.0,
-        lower_bound=10647.556726,
-        upper_bound=35419.994438,
-        amount0=100_000_000.0 * 0.5 / 19420.0,
+        init_price=init_price,
+        lower_bound=Pa,
+        upper_bound=Pb,
+        amount0=100_000_000.0 * 0.5 / init_price,
         amount1=100_000_000.0 * 0.5,
-        interval=(datetime.datetime(2020, 12, 1), datetime.datetime(2022, 6, 1))
+        interval=interval
     )
